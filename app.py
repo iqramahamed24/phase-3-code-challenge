@@ -1,70 +1,62 @@
-from database.setup import create_tables
-from database.connection import get_db_connection
-from models.article import Article
+import unittest
+from unittest.mock import MagicMock
 from models.author import Author
+from models.article import Article
 from models.magazine import Magazine
 
-def main():
-    # Initialize the database and create tables
-    create_tables()
+class TestModels(unittest.TestCase):
+    def setUp(self):
+        self.cursor = MagicMock()
 
-    # Collect user input
-    author_name = input("Enter author's name: ")
-    magazine_name = input("Enter magazine name: ")
-    magazine_category = input("Enter magazine category: ")
-    article_title = input("Enter article title: ")
-    article_content = input("Enter article content: ")
+    def test_author_creation(self):
+        author = Author(1, "John Doe")
+        self.assertEqual(author.name, "John Doe")
 
-    # Connect to the database
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    def test_article_creation(self):
+        article = Article(1, "Test Title", "Test Content", 1, 1)
+        self.assertEqual(article.title, "Test Title")
 
+    def test_magazine_creation(self):
+        magazine = Magazine(1, "Tech Weekly", "Technology")
+        self.assertEqual(magazine.name, "Tech Weekly")
 
-    '''
-        The following is just for testing purposes, 
-        you can modify it to meet the requirements of your implmentation.
-    '''
+    def test_create_author(self):
+        author = Author(None, "John Doe")
+        author.create_author(self.cursor)
+        self.cursor.execute.assert_called_once_with("INSERT INTO authors (name) VALUES (?)", ("John Doe",))
 
-    # Create an author
-    cursor.execute('INSERT INTO authors (name) VALUES (?)', (author_name,))
-    author_id = cursor.lastrowid # Use this to fetch the id of the newly created author
+    def test_get_all_authors(self):
+        self.cursor.fetchall.return_value = [(1, "John Doe"), (2, "John Doe")]
+        authors = Author.get_all_authors(self.cursor)
+        self.cursor.execute.assert_called_once_with("SELECT * FROM authors")
+        self.assertEqual(len(authors), 2)
+        self.assertEqual(authors[0].id, 1)
+        self.assertEqual(authors[0].name, "John Doe")
+        self.assertEqual(authors[1].id, 2)
+        self.assertEqual(authors[1].name, "John Doe")
 
-    # Create a magazine
-    cursor.execute('INSERT INTO magazines (name, category) VALUES (?,?)', (magazine_name, magazine_category))
-    magazine_id = cursor.lastrowid # Use this to fetch the id of the newly created magazine
+    def test_articles(self):
+        self.cursor.fetchall.return_value = [(1, "Test Article", "Test Content", 1, 1)]
+        author = Author(1, "John Doe")
+        articles = author.articles(self.cursor)
+        self.cursor.execute.assert_called_once_with("SELECT * FROM articles WHERE author_id = ?", (1,))
+        self.assertEqual(len(articles), 1)
+        self.assertEqual(articles[0][0], 1) 
+        self.assertEqual(articles[0][1], "Test Article") 
 
-    # Create an article
-    cursor.execute('INSERT INTO articles (title, content, author_id, magazine_id) VALUES (?, ?, ?, ?)',
-                   (article_title, article_content, author_id, magazine_id))
-
-    conn.commit()
-
-    # Query the database for inserted records. 
-    # The following fetch functionality should probably be in their respective models
-
-    cursor.execute('SELECT * FROM magazines')
-    magazines = cursor.fetchall()
-
-    cursor.execute('SELECT * FROM authors')
-    authors = cursor.fetchall()
-
-    cursor.execute('SELECT * FROM articles')
-    articles = cursor.fetchall()
-
-    conn.close()
-
-    # Display results
-    print("\nMagazines:")
-    for magazine in magazines:
-        print(Magazine(magazine["id"], magazine["name"], magazine["category"]))
-
-    print("\nAuthors:")
-    for author in authors:
-        print(Author(author["id"], author["name"]))
-
-    print("\nArticles:")
-    for article in articles:
-        print(Article(article["id"], article["title"], article["content"], article["author_id"], article["magazine_id"]))
+    def test_magazines(self):
+        self.cursor.fetchall.return_value = [(1, "Tech Magazine", "Technology")]
+        author = Author(1, "John Doe")
+        magazines = author.magazines(self.cursor)
+        self.cursor.execute.assert_called_once_with("""
+            SELECT magazines.*
+            FROM magazines
+            JOIN articles ON magazines.id = articles.magazine_id
+            WHERE articles.author_id = ?
+        """, (1,))
+        self.assertEqual(len(magazines), 1)
+        self.assertEqual(magazines[0][0], 1)  
+        self.assertEqual(magazines[0][1], "Tech Magazine") 
 
 if __name__ == "__main__":
-    main()
+    unittest.main()
