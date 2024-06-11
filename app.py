@@ -81,6 +81,11 @@ def get_article_author(cursor):
     else:
         print(f"No article found with ID {article_id}.")
 
+def create_magazine(cursor):
+    name = input("Enter magazine name: ")
+    category = input("Enter magazine category: ")
+    cursor.execute("INSERT INTO magazines (name, category) VALUES (?, ?)", (name, category))
+    print("Magazine created successfully.")
 
 def get_magazine(cursor):
     article_id = input("Enter the article ID to display the magazine: ")
