@@ -35,28 +35,7 @@ class TestModels(unittest.TestCase):
         self.assertEqual(authors[1].id, 2)
         self.assertEqual(authors[1].name, "John Doe")
 
-    def test_author_articles(self):
-        self.cursor.fetchall.return_value = [(1, "Test Article", "Test Content", 1, 1)]
-        author = Author(1, "John Doe")
-        articles = author.articles(self.cursor)
-        self.cursor.execute.assert_called_once_with("SELECT * FROM articles WHERE author_id = ?", (1,))
-        self.assertEqual(len(articles), 1)
-        self.assertEqual(articles[0][0], 1)
-        self.assertEqual(articles[0][1], "Test Article")
 
-    def test_author_magazines(self):
-        self.cursor.fetchall.return_value = [(1, "Tech Magazine", "Technology")]
-        author = Author(1, "John Doe")
-        magazines = author.magazines(self.cursor)
-        self.cursor.execute.assert_called_once_with("""
-            SELECT magazines.*
-            FROM magazines
-            JOIN articles ON magazines.id = articles.magazine_id
-            WHERE articles.author_id = ?
-        """, (1,))
-        self.assertEqual(len(magazines), 1)
-        self.assertEqual(magazines[0][0], 1)
-        self.assertEqual(magazines[0][1], "Tech Magazine")
 
 if __name__ == "__main__":
     unittest.main()

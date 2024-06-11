@@ -2,7 +2,7 @@ from database.setup import create_tables
 from database.connection import get_db_connection
 from models.article import Article
 from models.author import Author
-from models.magazine import Magazine
+
 
 
     
@@ -42,6 +42,7 @@ def get_author_magazines(cursor):
             print(f"ID: {magazine[0]}, Name: {magazine[1]}")
     else:
         print(f"No magazines found for Author ID {author_id}.")
+
 
 
      
@@ -97,67 +98,6 @@ def get_magazine(cursor):
     else:
         print(f"No article found with ID {article_id}.")
 
-
-def create_magazine(cursor):
-    magazine_name = input("Enter magazine name: ")
-    magazine_category = input("Enter magazine category: ")
-    magazine = Magazine(None, magazine_name, magazine_category)
-    magazine.create_magazine(cursor)
-    print("Magazine created Successfully")
-
-def get_all_magazines(cursor):
-    magazines = Magazine.get_all_magazines(cursor)
-    if magazines:
-        print("All Magazines:")
-        for magazine in magazines:
-            print(f"ID: {magazine.id}, Name: {magazine.name}, Category: {magazine.category}")
-    else:
-        print("No magazines found.")
-
-def get_magazine_articles(cursor):
-    magazine_id = input("Enter the magazine ID to display articles: ")
-    magazine = Magazine(magazine_id, None, None)
-    articles = magazine.articles(cursor)
-    if articles:
-        print(f"Articles associated with Magazine ID {magazine_id}:")
-        for article in articles:
-            print(f"ID: {article[0]}, Title: {article[1]}, Content: {article[2]}")
-    else:
-        print(f"No articles found for Magazine ID {magazine_id}.")
-
-
-def get_magazine_contributors(cursor):
-    magazine_id = input("Enter the magazine ID to display contributors: ")
-    magazine = Magazine(magazine_id, None, None)
-    contributors = magazine.contributors(cursor)
-    if contributors:
-        print(f"Contributors associated with Magazine ID {magazine_id}:")
-        for contributor in contributors:
-            print(f"ID: {contributor[0]}, Name: {contributor[1]}")
-    else:
-        print(f"No contributors found for Magazine ID {magazine_id}.")
-
-def get_magazine_article_titles(cursor):
-    magazine_id = input("Enter the magazine ID to display article titles: ")
-    magazine = Magazine(magazine_id, None, None)
-    titles = magazine.article_titles(cursor)
-    if titles:
-        print(f"Article titles associated with Magazine ID {magazine_id}:")
-        for title in titles:
-            print(f"Title: {title}")
-    else:
-        print(f"No article titles found for Magazine ID {magazine_id}.")
-
-def get_magazine_contributing_authors(cursor):
-    magazine_id = input("Enter the magazine ID to display contributing authors: ")
-    magazine = Magazine(magazine_id, None, None)
-    contributing_authors = magazine.contributing_authors(cursor)
-    if contributing_authors:
-        print(f"Contributing authors associated with Magazine ID {magazine_id}:")
-        for author in contributing_authors:
-            print(f"ID: {author[0]}, Name: {author[1]}, Article Count: {author[2]}")
-    else:
-        print(f"No contributing authors found for Magazine ID {magazine_id}.")
 
 
 
