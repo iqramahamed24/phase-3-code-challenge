@@ -1,65 +1,202 @@
-import unittest
-from unittest.mock import MagicMock
-from models.author import Author
+from database.setup import create_tables
+from database.connection import get_db_connection
 from models.article import Article
+from models.author import Author
 from models.magazine import Magazine
 
-class TestModels(unittest.TestCase):
-    def setUp(self):
-        self.cursor = MagicMock()
-
-    def test_article_creation(self):
-        article = Article(1, "Test Title", "Test Content", 1, 1)
-        self.assertEqual(article.title, "Test Title")
-
-    def test_create_author(self):
-        author = Author(None, "John Doe")
-        author.create_author(self.cursor)
-        self.cursor.execute.assert_called_once_with("INSERT INTO authors (name) VALUES (?)", ("John Doe",))
-
-    def test_author_creation(self):
-        author = Author(1, "John Doe")
-        self.assertEqual(author.name, "John Doe")
-
-    def test_magazine_creation(self):
-        magazine = Magazine(1, "Tech Weekly", "Technology")
-        self.assertEqual(magazine.name, "Tech Weekly")
 
     
-    def test_get_all_authors(self):
-        self.cursor.fetchall.return_value = [(1, "John Doe"), (2, "John Doe")]
-        authors = Author.get_all_authors(self.cursor)
-        self.cursor.execute.assert_called_once_with("SELECT * FROM authors")
-        self.assertEqual(len(authors), 2)
-        self.assertEqual(authors[0].id, 1)
-        self.assertEqual(authors[0].name, "John Doe")
-        self.assertEqual(authors[1].id, 2)
-        self.assertEqual(authors[1].name, "John Doe")
+def create_author(cursor):
+    author_name = input("Enter author name: ")
+    author = Author(None, author_name)
+    author.create_author(cursor)
+    print("Author created Successfully")
 
-  
-    def test_magazines(self):
-        self.cursor.fetchall.return_value = [(1, "Tech Magazine", "Technology")]
-        author = Author(1, "John Doe")
-        magazines = author.magazines(self.cursor)
-        self.cursor.execute.assert_called_once_with("""
-            SELECT magazines.*
-            FROM magazines
-            JOIN articles ON magazines.id = articles.magazine_id
-            WHERE articles.author_id = ?
-        """, (1,))
-        self.assertEqual(len(magazines), 1)
-        self.assertEqual(magazines[0][0], 1)  
-        self.assertEqual(magazines[0][1], "Tech Magazine") 
+def get_all_authors(cursor):
+    authors = Author.get_all_authors(cursor)
+    if authors:
+        print("All Author:")
+        for author in authors:
+            print(f"ID: {author.id}, Name: {author.name}")
+    else:
+        print("No author found.")
 
-    def test_articles(self):
-        self.cursor.fetchall.return_value = [(1, "Test Article", "Test Content", 1, 1)]
-        author = Author(1, "John Doe")
-        articles = author.articles(self.cursor)
-        self.cursor.execute.assert_called_once_with("SELECT * FROM articles WHERE author_id = ?", (1,))
-        self.assertEqual(len(articles), 1)
-        self.assertEqual(articles[0][0], 1) 
-        self.assertEqual(articles[0][1], "Test Article") 
+def get_author_articles(cursor):
+    author_id = input("Enter the author ID to display articles: ")
+    author = Author(author_id, None)
+    articles = author.articles(cursor)
+    if articles:
+        print(f"Articles associated with Author ID {author_id}:")
+        for article in articles:
+            print(f"ID: {article[0]}, Title: {article[1]}, Content: {article[2]}")
+    else:
+        print(f"No articles found for Author ID {author_id}.")
+
+def get_author_magazines(cursor):
+    author_id = input("Enter the author ID to display magazines: ")
+    author = Author(author_id, None)
+    magazines = author.magazines(cursor)
+    if magazines:
+        print(f"Magazines associated with Author ID {author_id}:")
+        for magazine in magazines:
+            print(f"ID: {magazine[0]}, Name: {magazine[1]}")
+    else:
+        print(f"No magazines found for Author ID {author_id}.")
+
+
+
+    
+def create_magazine(cursor):
+    magazine_name = input("Enter magazine name: ")
+    magazine_category = input("Enter magazine category: ")
+    magazine = Magazine(None, magazine_name, magazine_category)
+    magazine.create_magazine(cursor)
+    print("Magazine created Successfully")
+
+def get_all_magazines(cursor):
+    magazines = Magazine.get_all_magazines(cursor)
+    if magazines:
+        print("All Magazines:")
+        for magazine in magazines:
+            print(f"ID: {magazine.id}, Name: {magazine.name}, Category: {magazine.category}")
+    else:
+        print("No magazines found.")
+
+def get_magazine_articles(cursor):
+    magazine_id = input("Enter the magazine ID to display articles: ")
+    magazine = Magazine(magazine_id, None, None)
+    articles = magazine.articles(cursor)
+    if articles:
+        print(f"Articles associated with Magazine ID {magazine_id}:")
+        for article in articles:
+            print(f"ID: {article[0]}, Title: {article[1]}, Content: {article[2]}")
+    else:
+        print(f"No articles found for Magazine ID {magazine_id}.")
+
+
+def get_magazine_contributors(cursor):
+    magazine_id = input("Enter the magazine ID to display contributors: ")
+    magazine = Magazine(magazine_id, None, None)
+    contributors = magazine.contributors(cursor)
+    if contributors:
+        print(f"Contributors associated with Magazine ID {magazine_id}:")
+        for contributor in contributors:
+            print(f"ID: {contributor[0]}, Name: {contributor[1]}")
+    else:
+        print(f"No contributors found for Magazine ID {magazine_id}.")
+
+def get_magazine_article_titles(cursor):
+    magazine_id = input("Enter the magazine ID to display article titles: ")
+    magazine = Magazine(magazine_id, None, None)
+    titles = magazine.article_titles(cursor)
+    if titles:
+        print(f"Article titles associated with Magazine ID {magazine_id}:")
+        for title in titles:
+            print(f"Title: {title}")
+    else:
+        print(f"No article titles found for Magazine ID {magazine_id}.")
+
+def get_magazine_contributing_authors(cursor):
+    magazine_id = input("Enter the magazine ID to display contributing authors: ")
+    magazine = Magazine(magazine_id, None, None)
+    contributing_authors = magazine.contributing_authors(cursor)
+    if contributing_authors:
+        print(f"Contributing authors associated with Magazine ID {magazine_id}:")
+        for author in contributing_authors:
+            print(f"ID: {author[0]}, Name: {author[1]}, Article Count: {author[2]}")
+    else:
+        print(f"No contributing authors found for Magazine ID {magazine_id}.")
+
+
+
+     
+def create_article(cursor):
+    title = input("Enter article title: ")
+    content = input("Enter article content: ")
+    author_id = input("Enter author ID: ")
+    magazine_id = input("Enter magazine ID: ")
+    Article.create_article(cursor, title, content, author_id, magazine_id)
+    print("Article created successfully.")
+
+def get_article_title(cursor):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    titles = Article.get_title(cursor)
+    if titles:
+        print("Article Titles:")
+        for title in titles:
+           print(f"Title '{title}'")
+    else:
+        print("No articles found.")
+
+def get_article_author(cursor):
+    article_id = input("Enter the article ID to display the author: ")
+    cursor.execute("SELECT title, content, author_id, magazine_id FROM articles WHERE id = ?", (article_id,))
+    article_details = cursor.fetchone()
+
+    if article_details:
+        title, content, author_id, magazine_id = article_details
+        article = Article(article_id, title, content, author_id, magazine_id)
+        author = article.get_author(cursor)
+        if author:
+            print(f"Author of Article ID {article_id}: , Authors Name :{author}")
+        else:
+            print(f"No author found for Article ID {article_id}.")
+    else:
+        print(f"No article found with ID {article_id}.")
+
+
+def get_magazine(cursor):
+    article_id = input("Enter the article ID to display the magazine: ")
+    cursor.execute("SELECT title, content, author_id, magazine_id FROM articles WHERE id = ?", (article_id,))
+    article_details = cursor.fetchone()
+
+    if article_details:
+        title, content, author_id, magazine_id = article_details
+        article = Article(article_id, title, content, author_id, magazine_id)
+        magazine = article.get_magazine(cursor)
+        if magazine:
+            print(f"Magazine of Article ID {article_id}: , Magazine Name {magazine}")
+        else:
+            print(f"No magazine found for Article ID {article_id}.")
+    else:
+        print(f"No article found with ID {article_id}.")
+
+
+
+
+def main():
+    create_tables()
+
+
+    while True:
+        print("\nChoose:")
+        print("1.  Create Author")
+        print("2.  Create Magazine")
+        print("3.  Create Article")
+        choice = input("Enter A Number: ")
+
+        if choice == "1":
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            create_author(cursor)
+            conn.commit()
+            conn.close()
+        elif choice == "2":
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            create_magazine(cursor)
+            conn.commit()
+            conn.close()
+        elif choice == "3":
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            create_article(cursor)
+            conn.commit()
+            conn.close()
+        else:
+            print("Invalid option. Please enter a valid option.")
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()

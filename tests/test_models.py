@@ -6,9 +6,7 @@ from models.magazine import Magazine
 
 class TestModels(unittest.TestCase):
     def setUp(self):
-      
         self.cursor = MagicMock()
-
 
     def test_create_author(self):
         author = Author(None, "John Doe")
@@ -27,32 +25,29 @@ class TestModels(unittest.TestCase):
         magazine = Magazine(1, "Tech Weekly", "Technology")
         self.assertEqual(magazine.name, "Tech Weekly")
 
- 
     def test_get_all_authors(self):
-       
         self.cursor.fetchall.return_value = [(1, "John Doe"), (2, "John Doe")]
         authors = Author.get_all_authors(self.cursor)
-        self.cursor.execute.assert_called_once_with("SELECT * FROM authors")
+        self.cursor.execute.assert_called_once_with("SELECT id, name FROM authors")
         self.assertEqual(len(authors), 2)
         self.assertEqual(authors[0].id, 1)
         self.assertEqual(authors[0].name, "John Doe")
         self.assertEqual(authors[1].id, 2)
         self.assertEqual(authors[1].name, "John Doe")
 
-    def test_articles(self):
+    def test_author_articles(self):
         self.cursor.fetchall.return_value = [(1, "Test Article", "Test Content", 1, 1)]
         author = Author(1, "John Doe")
         articles = author.articles(self.cursor)
         self.cursor.execute.assert_called_once_with("SELECT * FROM articles WHERE author_id = ?", (1,))
         self.assertEqual(len(articles), 1)
-        self.assertEqual(articles[0][0], 1) 
-        self.assertEqual(articles[0][1], "Test Article") 
+        self.assertEqual(articles[0][0], 1)
+        self.assertEqual(articles[0][1], "Test Article")
 
-    def test_magazines(self):
+    def test_author_magazines(self):
         self.cursor.fetchall.return_value = [(1, "Tech Magazine", "Technology")]
         author = Author(1, "John Doe")
         magazines = author.magazines(self.cursor)
-        
         self.cursor.execute.assert_called_once_with("""
             SELECT magazines.*
             FROM magazines
@@ -60,18 +55,8 @@ class TestModels(unittest.TestCase):
             WHERE articles.author_id = ?
         """, (1,))
         self.assertEqual(len(magazines), 1)
-        self.assertEqual(magazines[0][0], 1)  
-        self.assertEqual(magazines[0][1], "Tech Magazine") 
-
-    def test_articles(self):
-        self.cursor.fetchall.return_value = [(1, "Test Article", "Test Content", 1, 1)]
-        author = Author(1, "John Doe")
-        articles = author.articles(self.cursor)
-        self.cursor.execute.assert_called_once_with("SELECT * FROM articles WHERE author_id = ?", (1,))
-        self.assertEqual(len(articles), 1)
-        self.assertEqual(articles[0][0], 1) 
-        self.assertEqual(articles[0][1], "Test Article") 
-
+        self.assertEqual(magazines[0][0], 1)
+        self.assertEqual(magazines[0][1], "Tech Magazine")
 
 if __name__ == "__main__":
     unittest.main()
